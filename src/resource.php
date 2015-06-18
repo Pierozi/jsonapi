@@ -183,8 +183,21 @@ public function add_relation($key, $relation, $skip_include=false) {
 		if (!empty($relation_array['data']['attributes']) && $skip_include == false) {
 			$this->add_included_resource($relation);
 		}
+
+        if (!empty($this->primary_relationships[$key])) {
+            if (isset($this->primary_relationships[$key]['data']['type'])) {
+                $this->primary_relationships[$key]['data'] = [$this->primary_relationships[$key]['data']];
+            }
+
+            $this->primary_relationships[$key]['data'][] = [
+                'type' => $relation_array['data']['type'],
+                'id' => $relation_array['data']['id']
+            ];
+
+            return;
+        }
 		
-		$relation = array(
+		$relationship = array(
 			'links' => array(
 				'self'    => $this->links['self'].'/relationships/'.$key,
 				'related' => $this->links['self'].'/'.$key,
@@ -193,16 +206,17 @@ public function add_relation($key, $relation, $skip_include=false) {
 				'type' => $relation_array['data']['type'],
 			),
 		);
+
 		if (!empty($relation_array['data']['id'])) {
-			$relation['data']['id'] = $relation_array['data']['id'];
+            $relationship['data']['id'] = $relation_array['data']['id'];
 		}
 	}
 	
-	if (is_array($relation) == false) {
+	if (is_array($relationship) == false) {
 		throw new \Exception('unknown relation format');
 	}
 	
-	$this->primary_relationships[$key] = $relation;
+	$this->primary_relationships[$key] = $relationship;
 }
 
 /**
